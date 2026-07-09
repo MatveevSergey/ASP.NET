@@ -12,7 +12,6 @@ public class RolesController(IRepository<Role> rolesRepository) : BaseController
     /// <summary>
     /// Получить все доступные роли сотрудников
     /// </summary>
-    /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<RoleResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<RoleResponse>>> Get(CancellationToken ct)
