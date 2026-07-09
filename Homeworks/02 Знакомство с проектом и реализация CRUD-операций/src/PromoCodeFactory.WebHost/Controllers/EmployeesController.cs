@@ -112,6 +112,11 @@ public class EmployeesController(
         [FromRoute] Guid id,
         CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var employee = await employeeRepository.GetById(id, ct);
+        if (employee is null) return NotFound();
+
+        await employeeRepository.Delete(id, ct);
+
+        return NoContent();
     }
 }
