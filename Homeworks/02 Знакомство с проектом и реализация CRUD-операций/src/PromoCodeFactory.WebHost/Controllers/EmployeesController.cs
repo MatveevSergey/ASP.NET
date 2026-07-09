@@ -79,7 +79,27 @@ public class EmployeesController(
         [FromBody] EmployeeUpdateRequest request,
         CancellationToken ct)
     {
-        throw new NotImplementedException();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var employee = await employeeRepository.GetById(id, ct);
+        if (employee is null) return NotFound();
+
+        var role = await roleRepository.GetById(request.RoleId, ct);
+        if (role is null)
+        {
+            ModelState.AddModelError(nameof(request.RoleId), "Role with specified id was not found.");
+            return BadRequest(ModelState);
+        }
+
+        employee.FirstName = request.FirstName;
+        employee.LastName = request.LastName;
+        employee.Email = request.Email;
+        employee.Role = role;
+        await employeeRepository.Update(employee, ct);
+
+        var response = Mapper.ToEmployeeResponse(employee);
+
+        return Ok(response);
     }
 
     /// <summary>
