@@ -59,7 +59,22 @@ public class CustomersController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CustomerShortResponse>> Create([FromBody] CustomerCreateRequest request, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var preferenceIds = request.PreferenceIds.Distinct().ToList();
+        var preferences = await preferenceRepository.GetByRangeId(preferenceIds, ct: ct);
+        if (preferences.Count != preferenceIds.Count)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid preferences",
+                Detail = "One or more PreferenceIds were not found."
+            });
+
+        var customer = CustomersMapper.ToCustomer(request, preferences);
+        await customerRepository.Add(customer, ct);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = customer.Id },
+            CustomersMapper.ToCustomerShortResponse(customer));
     }
 
     /// <summary>
