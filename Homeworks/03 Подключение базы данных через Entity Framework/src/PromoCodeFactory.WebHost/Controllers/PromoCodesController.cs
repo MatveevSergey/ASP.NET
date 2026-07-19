@@ -38,7 +38,15 @@ public class PromoCodesController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PromoCodeShortResponse>> GetById(Guid id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var promoCode = await promoCodeRepository.GetById(id, withIncludes: true, ct: ct);
+        if (promoCode is null)
+            return NotFound(new ProblemDetails
+            {
+                Title = "Promo code not found",
+                Detail = $"Promo code with id '{id}' was not found."
+            });
+
+        return Ok(PromoCodesMapper.ToPromoCodeShortResponse(promoCode));
     }
 
     /// <summary>
