@@ -71,5 +71,4 @@ internal class EfRepository<T>(PromoCodeFactoryDbContext context) : IRepository<
         if (affected == 0)
             throw new EntityNotFoundException(typeof(T), entity.Id);
     }
-
 }
