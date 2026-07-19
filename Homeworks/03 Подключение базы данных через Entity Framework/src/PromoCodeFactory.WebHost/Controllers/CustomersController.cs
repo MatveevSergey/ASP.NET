@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Models.Customers;
 
 namespace PromoCodeFactory.WebHost.Controllers;
@@ -6,7 +7,11 @@ namespace PromoCodeFactory.WebHost.Controllers;
 /// <summary>
 /// Клиенты
 /// </summary>
-public class CustomersController : BaseController
+public class CustomersController(
+    IRepository<Customer> customerRepository,
+    IRepository<Preference> preferenceRepository,
+    IRepository<PromoCode> promoCodeRepository)
+    : BaseController
 {
     /// <summary>
     /// Получить данные всех клиентов
@@ -15,7 +20,11 @@ public class CustomersController : BaseController
     [ProducesResponseType(typeof(IEnumerable<CustomerShortResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<CustomerShortResponse>>> Get(CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var customers = await customerRepository.GetAll(true, ct);
+
+        var customersModels = customers.Select(CustomersMapper.ToCustomerShortResponse).ToList();
+
+        return Ok(customersModels);
     }
 
     /// <summary>
