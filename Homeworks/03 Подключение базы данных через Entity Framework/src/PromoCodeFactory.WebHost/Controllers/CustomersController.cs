@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
+using PromoCodeFactory.WebHost.Mapping;
 using PromoCodeFactory.WebHost.Models.Customers;
 
 namespace PromoCodeFactory.WebHost.Controllers;
@@ -35,7 +36,19 @@ public class CustomersController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CustomerResponse>> GetById(Guid id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var customer = await customerRepository.GetById(id, true, ct);
+        if (customer is null)
+            return NotFound(new ProblemDetails
+            {
+                Title = "Customer not found",
+                Detail = $"Customer with id '{id}' was not found."
+            });
+
+        var promoCodeIds = customer.CustomerPromoCodes.Select(x => x.PromoCodeId);
+        var promoCodes = await promoCodeRepository.GetByRangeId(promoCodeIds, true, ct);
+        var promoCodesById = promoCodes.ToDictionary(x => x.Id);
+
+        return Ok(CustomersMapper.ToCustomerResponse(customer, promoCodesById));
     }
 
     /// <summary>
