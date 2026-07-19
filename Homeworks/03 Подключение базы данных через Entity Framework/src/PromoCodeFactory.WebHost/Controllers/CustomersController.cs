@@ -89,7 +89,31 @@ public class CustomersController(
         [FromBody] CustomerUpdateRequest request,
         CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var customer = await customerRepository.GetById(id, true, ct);
+        if (customer is null)
+            return NotFound(new ProblemDetails
+            {
+                Title = "Customer not found",
+                Detail = $"Customer with id '{id}' was not found."
+            });
+
+        var preferenceIds = request.PreferenceIds.Distinct().ToList();
+        var preferences = await preferenceRepository.GetByRangeId(preferenceIds, ct: ct);
+        if (preferences.Count != preferenceIds.Count)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid preferences",
+                Detail = "One or more PreferenceIds were not found."
+            });
+
+        customer.FirstName = request.FirstName;
+        customer.LastName = request.LastName;
+        customer.Email = request.Email;
+        customer.Preferences = preferences.ToList();
+
+        await customerRepository.Update(customer, ct);
+
+        return Ok(CustomersMapper.ToCustomerShortResponse(customer));
     }
 
     /// <summary>
