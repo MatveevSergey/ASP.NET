@@ -34,4 +34,35 @@ public static class PromoCodesMapper
             customerPromoCode.CreatedAt,
             customerPromoCode.AppliedAt);
     }
+
+    public static PromoCode ToPromoCode(
+        PromoCodeCreateRequest request,
+        Employee partnerManager,
+        Preference preference,
+        IEnumerable<Customer> customers)
+    {
+        var promoCodeId = Guid.NewGuid();
+        var createdAt = DateTimeOffset.UtcNow;
+
+        return new PromoCode
+        {
+            Id = promoCodeId,
+            Code = request.Code,
+            ServiceInfo = request.ServiceInfo,
+            PartnerName = request.PartnerName,
+            BeginDate = request.BeginDate,
+            EndDate = request.EndDate,
+            PartnerManager = partnerManager,
+            Preference = preference,
+            CustomerPromoCodes = customers
+                .Select(customer => new CustomerPromoCode
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = customer.Id,
+                    PromoCodeId = promoCodeId,
+                    CreatedAt = createdAt
+                })
+                .ToList()
+        };
+    }
 }
