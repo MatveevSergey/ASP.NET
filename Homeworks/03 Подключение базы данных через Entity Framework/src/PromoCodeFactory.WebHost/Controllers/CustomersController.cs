@@ -124,6 +124,19 @@ public class CustomersController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await customerRepository.Delete(id, ct);
+        }
+        catch (EntityNotFoundException ex)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Customer not found",
+                Detail = ex.Message
+            });
+        }
+
+        return NoContent();
     }
 }
