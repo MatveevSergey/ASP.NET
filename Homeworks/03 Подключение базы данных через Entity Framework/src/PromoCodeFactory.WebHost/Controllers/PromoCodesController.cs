@@ -58,7 +58,33 @@ public class PromoCodesController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PromoCodeShortResponse>> Create(PromoCodeCreateRequest request, CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var partnerManager = await employeeRepository.GetById(request.PartnerManagerId, ct: ct);
+        if (partnerManager is null)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid partner manager",
+                Detail = $"Employee with Id {request.PartnerManagerId} not found."
+            });
+
+        var preference = await preferenceRepository.GetById(request.PreferenceId, ct: ct);
+        if (preference is null)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid preference",
+                Detail = $"Preference with Id {request.PreferenceId} not found."
+            });
+
+        var customers = await customerRepository.GetWhere(
+            c => c.Preferences.Any(p => p.Id == request.PreferenceId),
+            ct: ct);
+
+        var promoCode = PromoCodesMapper.ToPromoCode(request, partnerManager, preference, customers);
+        await promoCodeRepository.Add(promoCode, ct);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = promoCode.Id },
+            PromoCodesMapper.ToPromoCodeShortResponse(promoCode));
     }
 
     /// <summary>
