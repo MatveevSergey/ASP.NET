@@ -99,6 +99,28 @@ public class PromoCodesController(
         [FromBody] PromoCodeApplyRequest request,
         CancellationToken ct)
     {
-        throw new NotImplementedException();
+        var customerPromoCodes = await customerPromoCodeRepository.GetWhere(
+            x => x.PromoCodeId == id && x.CustomerId == request.CustomerId,
+            ct: ct);
+
+        var customerPromoCode = customerPromoCodes.FirstOrDefault();
+        if (customerPromoCode is null)
+            return NotFound(new ProblemDetails
+            {
+                Title = "Promo code not found",
+                Detail = $"Promo code {id} for customer {request.CustomerId} not found."
+            });
+
+        if (customerPromoCode.AppliedAt is not null)
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Promo code already applied",
+                Detail = $"Promo code {id} has already been applied by customer {request.CustomerId}."
+            });
+
+        customerPromoCode.AppliedAt = DateTimeOffset.UtcNow;
+        await customerPromoCodeRepository.Update(customerPromoCode, ct);
+
+        return NoContent();
     }
 }
