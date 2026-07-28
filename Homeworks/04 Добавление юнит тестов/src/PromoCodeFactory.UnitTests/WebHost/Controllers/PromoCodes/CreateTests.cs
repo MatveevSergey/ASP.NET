@@ -163,6 +163,57 @@ public class CreateTests
     [Fact]
     public async Task Create_WhenValidRequest_ReturnsCreatedAndIncrementsIssuedCount()
     {
+        // Arrange
+        const int initialLimit = 10;
+        const int initialIssuedCount = 5;
+
+        var partnerId = Guid.NewGuid();
+        var limitId = Guid.NewGuid();
+        var partner = CreatePartnerWithLimit(partnerId, limitId, isActive: true, limit: initialLimit,
+                                            issuedCount: initialIssuedCount);
+        var preferenceId = Guid.NewGuid();
+        var preference = CreatePreference(preferenceId, string.Empty);
+        var request = CreatePromoCodeCreateRequest(partnerId, preferenceId);
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _preferencesRepositoryMock
+            .Setup(r => r.GetById(preferenceId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(preference);
+
+        _customersRepositoryMock
+            .Setup(r => r.GetWhere(It.IsAny<Expression<Func<Customer, bool>>>(), false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Customer>());
+
+        _promoCodesRepositoryMock
+            .Setup(r => r.Add(It.IsAny<PromoCode>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _partnersRepositoryMock
+            .Setup(r => r.Update(It.IsAny<Partner>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.Create(request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        var createdResult = (CreatedAtActionResult)result.Result!;
+        createdResult.ActionName.Should().Be(nameof(PromoCodesController.GetById));
+        createdResult.Value.Should().BeOfType<PromoCodeShortResponse>();
+
+        var limit = partner.PartnerLimits.Single(l => l.Id == limitId);
+        limit.IssuedCount.Should().Be(initialIssuedCount + 1);
+
+        _promoCodesRepositoryMock.Verify(
+            r => r.Add(It.IsAny<PromoCode>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _partnersRepositoryMock.Verify(
+            r => r.Update(partner, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     private static Partner CreatePartnerWithLimit(
