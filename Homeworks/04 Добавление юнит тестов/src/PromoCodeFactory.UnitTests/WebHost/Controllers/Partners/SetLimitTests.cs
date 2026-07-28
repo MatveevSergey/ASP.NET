@@ -71,16 +71,111 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenValidRequest_ReturnsCreatedAndAddsLimit()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var partner = CreatePartner(partnerId, isActive: true);
+        var request = CreatePartnerPromoCodeLimitCreateRequest();
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _partnerLimitsRepositoryMock
+            .Setup(r => r.Add(It.IsAny<PartnerPromoCodeLimit>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.CreateLimit(partnerId, request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        var createdResult = (CreatedAtActionResult)result.Result!;
+        createdResult.ActionName.Should().Be(nameof(PartnersController.GetLimit));
+        createdResult.RouteValues!["partnerId"].Should().Be(partnerId);
+        createdResult.Value.Should().BeOfType<PartnerPromoCodeLimitResponse>();
+
+        _partnerLimitsRepositoryMock.Verify(
+            r => r.Add(It.IsAny<PartnerPromoCodeLimit>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task CreateLimit_WhenValidRequestWithActiveLimits_CancelsOldLimitsAndAddsNew()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var oldLimitId = Guid.NewGuid();
+        var partner = CreatePartnerWithLimit(partnerId, oldLimitId, isActive: true);
+        var request = CreatePartnerPromoCodeLimitCreateRequest();
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _partnersRepositoryMock
+            .Setup(r => r.Update(It.IsAny<Partner>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _partnerLimitsRepositoryMock
+            .Setup(r => r.Add(It.IsAny<PartnerPromoCodeLimit>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.CreateLimit(partnerId, request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+
+        var oldLimit = partner.PartnerLimits.Single(l => l.Id == oldLimitId);
+        oldLimit.CanceledAt.Should().NotBeNull();
+
+        _partnersRepositoryMock.Verify(
+            r => r.Update(partner, It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _partnerLimitsRepositoryMock.Verify(
+            r => r.Add(It.IsAny<PartnerPromoCodeLimit>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task CreateLimit_WhenUpdateThrowsEntityNotFoundException_ReturnsNotFound()
     {
+    }
+
+    private static Partner CreatePartnerWithLimit(
+        Guid partnerId,
+        Guid limitId,
+        bool isActive,
+        DateTimeOffset? canceledAt = null)
+    {
+        var role = new AutoFaker<Role>()
+            .RuleFor(r => r.Id, _ => Guid.NewGuid())
+            .Generate();
+
+        var employee = new AutoFaker<Employee>()
+            .RuleFor(e => e.Id, _ => Guid.NewGuid())
+            .RuleFor(e => e.Role, role)
+            .Generate();
+
+        var limits = new List<PartnerPromoCodeLimit>();
+        var partner = new AutoFaker<Partner>()
+            .RuleFor(p => p.Id, _ => partnerId)
+            .RuleFor(p => p.IsActive, _ => isActive)
+            .RuleFor(p => p.Manager, employee)
+            .RuleFor(p => p.PartnerLimits, limits)
+            .Generate();
+
+        var limit = new AutoFaker<PartnerPromoCodeLimit>()
+            .RuleFor(l => l.Id, _ => limitId)
+            .RuleFor(l => l.Partner, partner)
+            .RuleFor(l => l.CanceledAt, _ => canceledAt)
+            .RuleFor(l => l.CreatedAt, _ => DateTimeOffset.UtcNow.AddDays(-1))
+            .RuleFor(l => l.EndAt, _ => DateTimeOffset.UtcNow.AddDays(30))
+            .Generate();
+
+        limits.Add(limit);
+        return partner;
     }
 
     private static Partner CreatePartner(Guid partnerId, bool isActive)
