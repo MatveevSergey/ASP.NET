@@ -124,11 +124,84 @@ public class CreateTests
     [Fact]
     public async Task Create_WhenLimitExceeded_ReturnsUnprocessableEntity()
     {
+        // Arrange
+        const int initialLimit = 10;
+        const int initialIssuedCount = 10;
+
+        var partnerId = Guid.NewGuid();
+        var limitId = Guid.NewGuid();
+        var partner = CreatePartnerWithLimit(partnerId, limitId, isActive: true, limit: initialLimit,
+                                            issuedCount: initialIssuedCount);
+        var preferenceId = Guid.NewGuid();
+        var preference = CreatePreference(preferenceId, string.Empty);
+        var request = CreatePromoCodeCreateRequest(partnerId, preferenceId);
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _preferencesRepositoryMock
+            .Setup(r => r.GetById(preferenceId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(preference);
+
+        _customersRepositoryMock
+            .Setup(r => r.GetWhere(It.IsAny<Expression<Func<Customer, bool>>>(), false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Customer>());
+
+        // Act
+        var result = await _sut.Create(request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<ObjectResult>();
+        var objectResult = (ObjectResult)result.Result!;
+        objectResult.StatusCode.Should().Be(StatusCodes.Status422UnprocessableEntity);
+        objectResult.Value.Should().BeOfType<ProblemDetails>();
+        var problemDetails = (ProblemDetails)objectResult.Value!;
+        problemDetails.Title.Should().Be("Limit exceeded");
     }
 
     [Fact]
     public async Task Create_WhenValidRequest_ReturnsCreatedAndIncrementsIssuedCount()
     {
+    }
+
+    private static Partner CreatePartnerWithLimit(
+        Guid partnerId,
+        Guid limitId,
+        bool isActive,
+        int limit,
+        int issuedCount,
+        DateTimeOffset? canceledAt = null)
+    {
+        var role = new AutoFaker<Role>()
+            .RuleFor(r => r.Id, _ => Guid.NewGuid())
+            .Generate();
+
+        var employee = new AutoFaker<Employee>()
+            .RuleFor(e => e.Id, _ => Guid.NewGuid())
+            .RuleFor(e => e.Role, role)
+            .Generate();
+
+        var limits = new List<PartnerPromoCodeLimit>();
+        var partner = new AutoFaker<Partner>()
+            .RuleFor(p => p.Id, _ => partnerId)
+            .RuleFor(p => p.IsActive, _ => isActive)
+            .RuleFor(p => p.Manager, employee)
+            .RuleFor(p => p.PartnerLimits, limits)
+            .Generate();
+
+        var partnerPromoCodeLimit = new AutoFaker<PartnerPromoCodeLimit>()
+            .RuleFor(l => l.Id, _ => limitId)
+            .RuleFor(l => l.Partner, partner)
+            .RuleFor(l => l.CanceledAt, _ => canceledAt)
+            .RuleFor(l => l.CreatedAt, _ => DateTimeOffset.UtcNow.AddDays(-1))
+            .RuleFor(l => l.EndAt, _ => DateTimeOffset.UtcNow.AddDays(30))
+            .RuleFor(l => l.Limit, _ => limit)
+            .RuleFor(l => l.IssuedCount, _ => issuedCount)
+            .Generate();
+
+        limits.Add(partnerPromoCodeLimit);
+        return partner;
     }
 
     private static Partner CreatePartner(Guid partnerId, bool isActive)
