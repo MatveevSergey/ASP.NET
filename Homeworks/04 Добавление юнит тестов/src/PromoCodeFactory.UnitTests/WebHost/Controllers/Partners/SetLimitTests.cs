@@ -4,6 +4,7 @@ using Moq;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
+using PromoCodeFactory.Core.Exceptions;
 using PromoCodeFactory.WebHost.Controllers;
 using PromoCodeFactory.WebHost.Models.Partners;
 using Soenneker.Utils.AutoBogus;
@@ -141,6 +142,24 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenUpdateThrowsEntityNotFoundException_ReturnsNotFound()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var partner = CreatePartnerWithLimit(partnerId, Guid.NewGuid(), isActive: true);
+        var request = CreatePartnerPromoCodeLimitCreateRequest();
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _partnersRepositoryMock
+            .Setup(r => r.Update(It.IsAny<Partner>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new EntityNotFoundException<Partner>(partnerId));
+
+        // Act
+        var result = await _sut.CreateLimit(partnerId, request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 
     private static Partner CreatePartnerWithLimit(
