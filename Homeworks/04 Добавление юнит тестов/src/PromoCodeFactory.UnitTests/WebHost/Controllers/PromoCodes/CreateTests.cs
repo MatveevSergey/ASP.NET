@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PromoCodeFactory.Core.Abstractions.Repositories;
+using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Controllers;
 using PromoCodeFactory.WebHost.Models.PromoCodes;
@@ -59,6 +60,29 @@ public class CreateTests
     [Fact]
     public async Task Create_WhenPreferenceNotFound_ReturnsNotFound()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var preferenceId = Guid.NewGuid();
+        var partner = CreatePartner(partnerId, isActive: true);
+        var request = CreatePromoCodeCreateRequest(partnerId, preferenceId);
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        _preferencesRepositoryMock
+            .Setup(r => r.GetById(preferenceId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Preference?)null);
+
+        // Act
+        var result = await _sut.Create(request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        var notFoundResult = (NotFoundObjectResult)result.Result!;
+        notFoundResult.Value.Should().BeOfType<ProblemDetails>();
+        var problemDetails = (ProblemDetails)notFoundResult.Value!;
+        problemDetails.Title.Should().Be("Preference not found");
     }
 
     [Fact]
@@ -74,6 +98,25 @@ public class CreateTests
     [Fact]
     public async Task Create_WhenValidRequest_ReturnsCreatedAndIncrementsIssuedCount()
     {
+    }
+
+    private static Partner CreatePartner(Guid partnerId, bool isActive)
+    {
+        var role = new AutoFaker<Role>()
+            .RuleFor(r => r.Id, _ => Guid.NewGuid())
+            .Generate();
+
+        var employee = new AutoFaker<Employee>()
+            .RuleFor(e => e.Id, _ => Guid.NewGuid())
+            .RuleFor(e => e.Role, role)
+            .Generate();
+
+        return new AutoFaker<Partner>()
+            .RuleFor(p => p.Id, _ => partnerId)
+            .RuleFor(p => p.IsActive, _ => isActive)
+            .RuleFor(p => p.Manager, employee)
+            .RuleFor(p => p.PartnerLimits, _ => new List<PartnerPromoCodeLimit>())
+            .Generate();
     }
 
     private static PromoCodeCreateRequest CreatePromoCodeCreateRequest(
