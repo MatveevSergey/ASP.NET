@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PromoCodeFactory.Core.Abstractions.Repositories;
+using PromoCodeFactory.Core.Domain.Administration;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Controllers;
 using PromoCodeFactory.WebHost.Models.Partners;
@@ -47,6 +48,24 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenPartnerBlocked_ReturnsUnprocessableEntity()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var partner = CreatePartner(partnerId, isActive: false);
+        var request = CreatePartnerPromoCodeLimitCreateRequest();
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(partner);
+
+        // Act
+        var result = await _sut.CreateLimit(partnerId, request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<UnprocessableEntityObjectResult>();
+        var objectResult = (UnprocessableEntityObjectResult)result.Result!;
+        objectResult.Value.Should().BeOfType<ProblemDetails>();
+        var problemDetails = (ProblemDetails)objectResult.Value!;
+        problemDetails.Title.Should().Be("Partner blocked");
     }
 
     [Fact]
@@ -62,6 +81,25 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenUpdateThrowsEntityNotFoundException_ReturnsNotFound()
     {
+    }
+
+    private static Partner CreatePartner(Guid partnerId, bool isActive)
+    {
+        var role = new AutoFaker<Role>()
+            .RuleFor(r => r.Id, _ => Guid.NewGuid())
+            .Generate();
+
+        var employee = new AutoFaker<Employee>()
+            .RuleFor(e => e.Id, _ => Guid.NewGuid())
+            .RuleFor(e => e.Role, role)
+            .Generate();
+
+        return new AutoFaker<Partner>()
+            .RuleFor(p => p.Id, _ => partnerId)
+            .RuleFor(p => p.IsActive, _ => isActive)
+            .RuleFor(p => p.Manager, employee)
+            .RuleFor(p => p.PartnerLimits, _ => new List<PartnerPromoCodeLimit>())
+            .Generate();
     }
 
     private static PartnerPromoCodeLimitCreateRequest CreatePartnerPromoCodeLimitCreateRequest()
