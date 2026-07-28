@@ -1,7 +1,11 @@
+using AwesomeAssertions;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
 using PromoCodeFactory.WebHost.Controllers;
+using PromoCodeFactory.WebHost.Models.Partners;
+using Soenneker.Utils.AutoBogus;
 
 namespace PromoCodeFactory.UnitTests.WebHost.Controllers.Partners;
 
@@ -21,6 +25,23 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenPartnerNotFound_ReturnsNotFound()
     {
+        // Arrange
+        var partnerId = Guid.NewGuid();
+        var request = CreatePartnerPromoCodeLimitCreateRequest();
+
+        _partnersRepositoryMock
+            .Setup(r => r.GetById(partnerId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Partner?)null);
+
+        // Act
+        var result = await _sut.CreateLimit(partnerId, request, CancellationToken.None);
+
+        // Assert
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
+        var notFoundResult = (NotFoundObjectResult)result.Result!;
+        notFoundResult.Value.Should().BeOfType<ProblemDetails>();
+        var problemDetails = (ProblemDetails)notFoundResult.Value!;
+        problemDetails.Title.Should().Be("Partner not found");
     }
 
     [Fact]
@@ -41,5 +62,13 @@ public class SetLimitTests
     [Fact]
     public async Task CreateLimit_WhenUpdateThrowsEntityNotFoundException_ReturnsNotFound()
     {
+    }
+
+    private static PartnerPromoCodeLimitCreateRequest CreatePartnerPromoCodeLimitCreateRequest()
+    {
+        return new AutoFaker<PartnerPromoCodeLimitCreateRequest>()
+            .RuleFor(r => r.EndAt, _ => DateTimeOffset.UtcNow.AddDays(30))
+            .RuleFor(r => r.Limit, f => f.Random.Int(1, 1000))
+            .Generate();
     }
 }
