@@ -1,0 +1,63 @@
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.45;
+  color: #08060d;
+  background: #f7f7f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 100svh;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.page {
+  padding: 32px 24px;
+  text-align: left;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: #6b6375;
+}
+
+.error {
+  color: #b42318;
+}
+
+.weather-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.weather-table th,
+.weather-table td {
+  padding: 10px 12px;
+  border: 1px solid #e5e4e7;
+  text-align: left;
+}
+
+.weather-table th {
+  background: #f4f3ec;
+  color: #08060d;
+  font-weight: 600;
+}
+
+.weather-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
