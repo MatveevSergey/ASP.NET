@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="hw9app.client/hw9app.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="HW9app.Server/HW9app.Server.csproj" />
+</Solution>
