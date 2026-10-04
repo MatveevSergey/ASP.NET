@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcf.Administration", "Pcf.Administration", "{92A39EB2-4342-42A8-A30F-36DB3B5D2C95}"
 EndProject
@@ -33,6 +33,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pcf.ReceivingFromPartner.WebHost", "Pcf.ReceivingFromPartner\Pcf.ReceivingFromPartner.WebHost\Pcf.ReceivingFromPartner.WebHost.csproj", "{3C4538FC-B200-4DC1-B278-DE43800B0BE3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pcf.Administration.IntegrationTests", "Pcf.Administration\Pcf.Administration.IntegrationTests\Pcf.Administration.IntegrationTests.csproj", "{38F1FFB6-5EBF-4EDF-B74E-AF29B0F1ABF7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pcf.Preferences", "Pcf.Preferences", "{1C79172D-9E28-DCDE-76BC-21D6EA5A8CDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pcf.Preferences.WebHost", "Pcf.Preferences\Pcf.Preferences.WebHost\Pcf.Preferences.WebHost.csproj", "{37EB7C54-1F02-4310-BE48-8B98B9624747}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pcf.Preferences.Core", "Pcf.Preferences\Pcf.Preferences.Core\Pcf.Preferences.Core.csproj", "{AE118833-F19B-44CE-8D87-CF32C4F55FE2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pcf.Preferences.DataAccess", "Pcf.Preferences\Pcf.Preferences.DataAccess\Pcf.Preferences.DataAccess.csproj", "{1A2EA8EB-A78B-4DE2-B199-30BAF466A794}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,6 +104,21 @@ Global
 		{38F1FFB6-5EBF-4EDF-B74E-AF29B0F1ABF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38F1FFB6-5EBF-4EDF-B74E-AF29B0F1ABF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38F1FFB6-5EBF-4EDF-B74E-AF29B0F1ABF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37EB7C54-1F02-4310-BE48-8B98B9624747}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37EB7C54-1F02-4310-BE48-8B98B9624747}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37EB7C54-1F02-4310-BE48-8B98B9624747}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37EB7C54-1F02-4310-BE48-8B98B9624747}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE118833-F19B-44CE-8D87-CF32C4F55FE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE118833-F19B-44CE-8D87-CF32C4F55FE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE118833-F19B-44CE-8D87-CF32C4F55FE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE118833-F19B-44CE-8D87-CF32C4F55FE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A2EA8EB-A78B-4DE2-B199-30BAF466A794}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2EA8EB-A78B-4DE2-B199-30BAF466A794}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2EA8EB-A78B-4DE2-B199-30BAF466A794}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2EA8EB-A78B-4DE2-B199-30BAF466A794}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9444DA16-B06A-4E98-9C01-81463A95CACB} = {92A39EB2-4342-42A8-A30F-36DB3B5D2C95}
@@ -112,5 +135,8 @@ Global
 		{9CA552AE-FAAA-40B5-BC89-040F041CA48E} = {45AAAE31-1D5D-400B-ADAA-DE16D7B95BD5}
 		{3C4538FC-B200-4DC1-B278-DE43800B0BE3} = {45AAAE31-1D5D-400B-ADAA-DE16D7B95BD5}
 		{38F1FFB6-5EBF-4EDF-B74E-AF29B0F1ABF7} = {92A39EB2-4342-42A8-A30F-36DB3B5D2C95}
+		{37EB7C54-1F02-4310-BE48-8B98B9624747} = {1C79172D-9E28-DCDE-76BC-21D6EA5A8CDB}
+		{AE118833-F19B-44CE-8D87-CF32C4F55FE2} = {1C79172D-9E28-DCDE-76BC-21D6EA5A8CDB}
+		{1A2EA8EB-A78B-4DE2-B199-30BAF466A794} = {1C79172D-9E28-DCDE-76BC-21D6EA5A8CDB}
 	EndGlobalSection
 EndGlobal

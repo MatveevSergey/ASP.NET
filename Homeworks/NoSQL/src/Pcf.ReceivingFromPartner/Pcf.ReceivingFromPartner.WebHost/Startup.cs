@@ -48,6 +48,17 @@ namespace Pcf.ReceivingFromPartner.WebHost
             {
                 c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
             });
+
+            var preferencesApiUrl = Configuration["IntegrationSettings:PreferencesApiUrl"];
+            if (string.IsNullOrWhiteSpace(preferencesApiUrl))
+            {
+                throw new InvalidOperationException("Не задан адрес сервиса предпочтений.");
+            }
+
+            services.AddHttpClient<IPreferencesGateway, PreferencesGateway>(c =>
+            {
+                c.BaseAddress = new Uri(preferencesApiUrl);
+            });
             
             services.AddDbContext<DataContext>(x =>
             {
