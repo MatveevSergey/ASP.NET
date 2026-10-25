@@ -17,9 +17,13 @@ services:
     ports:
       - "8091:8080"
     environment:
-      - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"          
+      - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"
+      - "RabbitMq:Host=promocode-factory-rabbitmq"
+      - "RabbitMq:Username=guest"
+      - "RabbitMq:Password=guest"
     depends_on: 
       - promocode-factory-administration-db
+      - promocode-factory-rabbitmq
 
 
   #ReceivingFromPartner Db
@@ -42,9 +46,13 @@ services:
     environment:
       - "ConnectionStrings:PromocodeFactoryReceivingFromPartnerDb=Host=promocode-factory-receiving-from-partner-db;Database=promocode_factory_receiving_from_partner_db;Username=postgres;Password=docker"
       - "IntegrationSettings:GivingToCustomerApiUrl=http://promocode-factory-giving-to-customer-api"    
-      - "IntegrationSettings:AdministrationApiUrl=http://promocode-factory-administration-api"       
+      - "IntegrationSettings:AdministrationApiUrl=http://promocode-factory-administration-api"
+      - "RabbitMq:Host=promocode-factory-rabbitmq"
+      - "RabbitMq:Username=guest"
+      - "RabbitMq:Password=guest"
     depends_on: 
       - promocode-factory-receiving-from-partner-db
+      - promocode-factory-rabbitmq
   
   #GivingToCustomer Db
   promocode-factory-giving-to-customer-db:
@@ -64,6 +72,21 @@ services:
     ports:
       - "8093:8080"
     environment:
-      - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"          
+      - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"
+      - "RabbitMq:Host=promocode-factory-rabbitmq"
+      - "RabbitMq:Username=guest"
+      - "RabbitMq:Password=guest"
     depends_on: 
       - promocode-factory-giving-to-customer-db
+      - promocode-factory-rabbitmq
+
+  promocode-factory-rabbitmq:
+    image: "rabbitmq:4.3-management"
+    container_name: "promocode-factory-rabbitmq"
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
