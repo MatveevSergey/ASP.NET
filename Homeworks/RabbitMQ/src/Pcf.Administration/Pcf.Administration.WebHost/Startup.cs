@@ -5,10 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MassTransit;
 using Pcf.Administration.DataAccess;
 using Pcf.Administration.DataAccess.Repositories;
 using Pcf.Administration.DataAccess.Data;
 using Pcf.Administration.Core.Abstractions.Repositories;
+using Pcf.Administration.Core.Abstractions.Services;
+using Pcf.Administration.Core.Services;
+using Pcf.Administration.WebHost.Consumers;
 using System;
 
 namespace Pcf.Administration.WebHost
@@ -29,7 +33,27 @@ namespace Pcf.Administration.WebHost
             services.AddControllers().AddMvcOptions(x =>
                 x.SuppressAsyncSuffixInActionNames = false);
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
+
+            services.AddMassTransit(x =>
+            {
+                x.AddConsumer<PromoCodeReceivedConsumer>();
+
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(Configuration["RabbitMq:Host"], h =>
+                    {
+                        h.Username(Configuration["RabbitMq:Username"]);
+                        h.Password(Configuration["RabbitMq:Password"]);
+                    });
+
+                    cfg.ReceiveEndpoint("administration-promo-code-received", e =>
+                    {
+                        e.ConfigureConsumer<PromoCodeReceivedConsumer>(context);
+                    });
+                });
+            });
             services.AddDbContext<DataContext>(x =>
             {
                 //x.UseSqlite("Filename=PromocodeFactoryAdministrationDb.sqlite");
