@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Pcf.GivingToCustomer.Core.Domain;
-using Pcf.GivingToCustomer.DataAccess.Data;
 
 namespace Pcf.GivingToCustomer.DataAccess
 {
@@ -10,8 +9,6 @@ namespace Pcf.GivingToCustomer.DataAccess
         public DbSet<PromoCode> PromoCodes { get; set; }
 
         public DbSet<Customer> Customers { get; set; }
-        
-        public DbSet<Preference> Preferences { get; set; }
 
         public DataContext()
         {
@@ -31,11 +28,12 @@ namespace Pcf.GivingToCustomer.DataAccess
             modelBuilder.Entity<CustomerPreference>()
                 .HasOne(bc => bc.Customer)
                 .WithMany(b => b.Preferences)
-                .HasForeignKey(bc => bc.CustomerId);  
+                .HasForeignKey(bc => bc.CustomerId);
             modelBuilder.Entity<CustomerPreference>()
-                .HasOne(bc => bc.Preference)
-                .WithMany()
-                .HasForeignKey(bc => bc.PreferenceId); 
+                .Ignore(bc => bc.Preference);
+
+            modelBuilder.Entity<PromoCode>()
+                .Ignore(p => p.Preference); 
         }
     }
 }

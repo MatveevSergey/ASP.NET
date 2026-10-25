@@ -38,6 +38,17 @@ namespace Pcf.GivingToCustomer.WebHost
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
+
+            var preferencesApiUrl = Configuration["IntegrationSettings:PreferencesApiUrl"];
+            if (string.IsNullOrWhiteSpace(preferencesApiUrl))
+            {
+                throw new InvalidOperationException("Не задан адрес сервиса предпочтений.");
+            }
+
+            services.AddHttpClient<IPreferencesGateway, PreferencesGateway>(c =>
+            {
+                c.BaseAddress = new Uri(preferencesApiUrl);
+            });
             services.AddDbContext<DataContext>(x =>
             {
                 //x.UseSqlite("Filename=PromocodeFactoryGivingToCustomerDb.sqlite");

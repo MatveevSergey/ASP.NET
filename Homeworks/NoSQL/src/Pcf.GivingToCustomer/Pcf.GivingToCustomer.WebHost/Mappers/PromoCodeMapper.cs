@@ -21,7 +21,6 @@ using Pcf.GivingToCustomer.WebHost.Models;
             promocode.BeginDate = DateTime.Parse(request.BeginDate);
             promocode.EndDate = DateTime.Parse(request.EndDate);
 
-            promocode.Preference = preference;
             promocode.PreferenceId = preference.Id;
 
             promocode.Customers = new List<PromoCodeCustomer>();

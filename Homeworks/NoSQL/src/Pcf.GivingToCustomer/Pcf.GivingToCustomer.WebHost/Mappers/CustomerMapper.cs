@@ -25,7 +25,6 @@ namespace Pcf.GivingToCustomer.WebHost.Mappers
             customer.Preferences = preferences.Select(x => new CustomerPreference()
             {
                 CustomerId = customer.Id,
-                Preference = x,
                 PreferenceId = x.Id
             }).ToList();
             

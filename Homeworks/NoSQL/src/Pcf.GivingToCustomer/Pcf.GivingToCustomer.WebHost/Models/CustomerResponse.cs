@@ -19,8 +19,10 @@ namespace Pcf.GivingToCustomer.WebHost.Models
             
         }
 
-        public CustomerResponse(Customer customer)
+        public CustomerResponse(Customer customer, IEnumerable<Preference> preferences)
         {
+            var preferenceNames = preferences.ToDictionary(x => x.Id, x => x.Name);
+
             Id = customer.Id;
             Email = customer.Email;
             FirstName = customer.FirstName;
@@ -28,7 +30,9 @@ namespace Pcf.GivingToCustomer.WebHost.Models
             Preferences = customer.Preferences.Select(x => new PreferenceResponse()
             {
                 Id = x.PreferenceId,
-                Name = x.Preference.Name
+                Name = preferenceNames.ContainsKey(x.PreferenceId)
+                    ? preferenceNames[x.PreferenceId]
+                    : null
             }).ToList();
             PromoCodes = customer.PromoCodes.Select(x => new PromoCodeShortResponse()
                 {
